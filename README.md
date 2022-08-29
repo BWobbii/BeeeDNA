@@ -32,3 +32,27 @@ The workflow contains of two bash scripts and one config file. The config file c
 7. Taxonomic classification
 
 ## Data analysis in R
+0. load required packages
+1. Data import
+2. Analysis of DNA quantity & quality, short&long fragment
+3. Import and preparation of sequencing results, short fragment only
++ import data
++ subset to Metazoa, analyse laboratory controls (remove contaminant taxa, positive control taxon (*Apis mellifera*) and control samples)
++ clean up sample data
++ agglomerate to species / genus / family
++ subset to Arthropoda / Hymenoptera+Diptera / Hymenoptera, remove unclassified species
++ richness estimates, count Hymenoptera detections, count detections of mixed species
++ conversion of characters to vectors
+4. Analysis of sequencing results
+..4.1. Experiment 1: Detection of Hymenoptera
++ visualise Detection of Hymenoptera
++ statistical analysis, Fisher's exact test, logistic regression (generalised linear models)
+
+..4.2. Experiment 2: Mixed species detection
++ visualisation (?)
++ statistical analysis, logistic regression (generalised linear models), NO FISHER (?)
+
+..4.3. Validation: Comparison with morphological data
++ import and clean up morphological data
++ explorative analyses
++ sample-wise comparison
