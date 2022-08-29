@@ -44,15 +44,15 @@ The workflow contains of two bash scripts and one config file. The config file c
 + richness estimates, count Hymenoptera detections, count detections of mixed species
 + conversion of characters to vectors
 4. Analysis of sequencing results
-..4.1. Experiment 1: Detection of Hymenoptera
+4.1. Experiment 1: Detection of Hymenoptera
 + visualise Detection of Hymenoptera
 + statistical analysis, Fisher's exact test, logistic regression (generalised linear models)
 
-..4.2. Experiment 2: Mixed species detection
+4.2. Experiment 2: Mixed species detection
 + visualisation (?)
 + statistical analysis, logistic regression (generalised linear models), NO FISHER (?)
 
-..4.3. Validation: Comparison with morphological data
+4.3. Validation: Comparison with morphological data
 + import and clean up morphological data
 + explorative analyses
 + sample-wise comparison
