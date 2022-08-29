@@ -9,11 +9,10 @@ We followed a dual-tagging strategy adapted from Herbold et al., 2015 and Elbrec
 
 
 ## Third party tools
-## Study design (short version)
-  COI via bc-databaser 
-	MIDORI
-	VSEARCH & cutadapt
-	R (packages: dplyr, vegan, phyloseq)
++ COI via bc-databaser 
++ MIDORI
++ VSEARCH & cutadapt
++ R (packages: dplyr, vegan, phyloseq)
 
 ## Overview
 The workflow contains of two bash scripts and one config file. The config file contains information about used sample-tags, primer sequences, reference databases, etc.
