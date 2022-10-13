@@ -32,7 +32,19 @@ The workflow contains of two bash scripts and one config file. The config file c
 7. Taxonomic classification
 
 ## Data analysis in R
+see file R_script_Analysis_BeeeDNA.R
+
 ### 0. load required packages
++ tidyverse (v.1.3.2)
++ phyloseq (v.1.38.0)
++ rstatix (v.0.7.0)
++ PMCMRplus (v.1.9.3) 
++ broom (v.1.0.1)
++ parsnip (v.1.0.1) 
++ yardstick (v.1.1.0)
++ cowplot  (v.1.1.1)
++ EnvStats (v.2.7.0)
++ ggsignif (v.0.6.3)
 ### 1. Data import
 ### 2. Analysis of DNA quantity & quality, short&long fragment
 ### 3. Import and preparation of sequencing results, short fragment only
