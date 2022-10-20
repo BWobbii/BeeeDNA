@@ -1,0 +1,12 @@
+tagF=24
+tagR=16
+
+prFn=GGDACWGGWTGAACWGTWTAYCCHCC
+prRn=GTRATWGCHCCDGCTARWACWGG
+
+prFr=GGDGGRTAWACWGTTCAWCCWGTHCC
+prRr=CCWGTWYTAGCHGGDGCWATYAC
+
+refdb="/mnt/data/homes/sickel/Dokumente/bin/referenceDBs/coi.GBIF.Arthro.2021-03-12.tax_ed.fa"
+refdb="/mnt/data/homes/sickel/Dokumente/bin/referenceDBs/bold.fa"
+hiedb="/mnt/data/homes/sickel/Dokumente/bin/referenceDBs/MIDU.fin.fa"
