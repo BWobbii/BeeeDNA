@@ -4,7 +4,7 @@ Data Analysis Scripts for Sickel et al. 'eDNA allows non-lethal detection of cav
 ## Study design (short version)
 105 vacated nest tubes of cavity nesting Hymenoptera were selected, covering nests of different sizes, parasitised and otherwise mixed species nests.
 We compared two sample types, obtained from those nests (fecal pellets and swab heads). 
-DNA was extracted and two different COI fragments were amplified, referred to as COI.short (~ 205 bp; primers fwhF2&fwhR2n (Elbrecht et al., 2019)) and COI.long (~ 313 bp; primers mlCOIintF&HCO2198 (Folmer et al. 1994; Leray et al. 2013)).
+DNA was extracted and two different COI fragments were amplified, referred to as COI.short (~ 205 bp; primers fwhF2&fwhR2n ([Elbrecht et al., 2019](https://peerj.com/articles/7745/))) and COI.long (~ 313 bp; primers mlCOIintF&HCO2198 (Folmer et al. 1994; Leray et al. 2013)).
 We followed a dual-tagging strategy adapted from Herbold et al., 2015 and Elbrecht&Steinke, 2018 (upload tag file), samples were amplified in duplicate.
 
 
