@@ -9,7 +9,7 @@ We followed a dual-tagging strategy adapted from [Herbold et al., 2015](https://
 
 
 ## Third party tools
-+ COI via bc-databaser 
++ COI via [BCdatabaser](https://github.com/molbiodiv/bcdatabaser) 
 + MIDORI
 + VSEARCH & cutadapt
 + R (packages: dplyr, vegan, phyloseq)
