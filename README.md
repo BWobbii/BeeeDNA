@@ -11,8 +11,9 @@ We followed a dual-tagging strategy adapted from [Herbold et al., 2015](https://
 ## Third party tools
 + COI via [BCdatabaser](https://github.com/molbiodiv/bcdatabaser) 
 + MIDORI
-+ [VSEARCH](https://github.com/torognes/vsearch) & cutadapt
-+ R (packages: dplyr, vegan, phyloseq)
++ [VSEARCH](https://github.com/torognes/vsearch)
++ [cutadapt](https://github.com/marcelm/cutadapt)
++ R (see used packages further down)
 
 ## Overview
 The workflow contains of two bash scripts and one config file. The config file contains information about used sample-tags, primer sequences, reference databases, etc.
@@ -46,9 +47,19 @@ see file R_script_Analysis_BeeeDNA.R
 + EnvStats (v.2.7.0)
 + ggsignif (v.0.6.3)
 ### 1. Data import
++ import data containing all samples, both fragments
++ clean up data, e.g. converting & ordering categorical variables
 ### 2. Analysis of DNA quantity & quality, short&long fragment
+#### DNA quantity
++ determine standard metrics such as mean, standard deviation, minimum, maximum of DNA yields, for all samples, but also for feces and swabs separately, as well as different nest sizes
++ test for normal distribution using Shapiro-Wilk test (not normally distributed)
++ test for differences between sample types & nest sizes regarding DNA yields using Kruskal-Wallis test, posthoc-testing: Kruskal-Nemenyi’s All-Pairs Rank Comparison Test
+#### DNA quality
++ DNA quality = visible band in agarose gel electrophoresis after 1st PCR
++ analysed for short and long fragment separately
++ determined number of succsessfully amplified samples as well as numbers of cases where duplicate samples were in agreement (all samples, sample types, nest sizes)
 ### 3. Import and preparation of sequencing results, short fragment only
-+ import data
++ import community table (ASV-based) & taxonomy table, merge with sample data (already imported) to *phyloseq*-object
 + subset to Metazoa, analyse laboratory controls (remove contaminant taxa, positive control taxon (*Apis mellifera*) and control samples)
 + clean up sample data
 + agglomerate to species / genus / family
