@@ -11,7 +11,7 @@ We followed a dual-tagging strategy adapted from [Herbold et al., 2015](https://
 ## Third party tools
 + COI via [BCdatabaser](https://github.com/molbiodiv/bcdatabaser) 
 + MIDORI
-+ VSEARCH & cutadapt
++ [VSEARCH](https://github.com/torognes/vsearch) & cutadapt
 + R (packages: dplyr, vegan, phyloseq)
 
 ## Overview
