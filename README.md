@@ -9,8 +9,8 @@ We followed a dual-tagging strategy adapted from [Herbold et al., 2015](https://
 
 
 ## Third party tools
-+ COI via [BCdatabaser](https://github.com/molbiodiv/bcdatabaser) 
-+ MIDORI
++ [BCdatabaser](https://github.com/molbiodiv/bcdatabaser) 
++ [MIDORI UNIQ GB 241](http://www.reference-midori.info/download.php#)
 + [VSEARCH](https://github.com/torognes/vsearch)
 + [cutadapt](https://github.com/marcelm/cutadapt)
 + R (see used packages further down)
@@ -53,7 +53,9 @@ see file R_script_Analysis_BeeeDNA.R
 #### DNA quantity
 + determine standard metrics such as mean, standard deviation, minimum, maximum of DNA yields, for all samples, but also for feces and swabs separately, as well as different nest sizes
 + test for normal distribution using Shapiro-Wilk test (not normally distributed)
-+ test for differences between sample types & nest sizes regarding DNA yields using Kruskal-Wallis test, posthoc-testing: Kruskal-Nemenyi’s All-Pairs Rank Comparison Test
++ test for differences between sample types & nest sizes regarding DNA yields using Kruskal-Wallis test, posthoc-testing: Kruskal-Nemenyi’s All-Pairs Rank 
++ visualisation via violin and scatter plot
+Comparison Test
 #### DNA quality
 + DNA quality = visible band in agarose gel electrophoresis after 1st PCR
 + analysed for short and long fragment separately
@@ -61,21 +63,19 @@ see file R_script_Analysis_BeeeDNA.R
 ### 3. Import and preparation of sequencing results, short fragment only
 + import community table (ASV-based) & taxonomy table, merge with sample data (already imported) to *phyloseq*-object
 + subset to Metazoa, analyse laboratory controls (remove contaminant taxa, positive control taxon (*Apis mellifera*) and control samples)
-+ clean up sample data
 + agglomerate to species / genus / family
-+ subset to Arthropoda / Hymenoptera+Diptera / Hymenoptera, remove unclassified species
-+ richness estimates, count Hymenoptera detections, count detections of mixed species
-+ conversion of characters to vectors
++ subset to Arthropoda / Hymenoptera & Diptera / Hymenoptera, remove unclassified species
 ### 4. Analysis of sequencing results
 #### 4.1. Experiment 1: Detection of Hymenoptera
-+ visualise Detection of Hymenoptera
-+ statistical analysis, Fisher's exact test, logistic regression (generalised linear models)
-
++ determine richness estimates, count Hymenoptera detections, count detections of mixed species
++ visualise Hymenoptera detection rates as bar plot
++ compare Hymenoptera detection rates between sample types, nest sizes, etc. using Fisher's exact test
++ analyse generalised linear models (categorical variables converted to numerical), to assess whether explanatory variables, DNA yield and/or electrophoresis can be used to predict Hymenoptera detection rates
 #### 4.2. Experiment 2: Mixed species detection
-+ visualisation (?)
-+ statistical analysis, logistic regression (generalised linear models), NO FISHER (?)
-
-#### 4.3. Validation: Comparison with morphological data
++ similar to 4.1., but counting cases where number of species detected > 1 (Hymenoptera & Diptera)
++ no visualisation
+#### 4.3. Validation: Validation via morphological data
 + import and clean up morphological data
-+ explorative analyses
++ compare detected taxa across all samples / different taxonomic levels
 + sample-wise comparison
++ visualise as bar plots
