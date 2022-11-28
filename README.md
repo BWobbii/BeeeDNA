@@ -1,5 +1,5 @@
 # BeeeDNA
-Data Analysis Scripts for Sickel et al. 'eDNA allows non-lethal detection of cavity nesting wild bees and their parasitoids'
+Data Analysis Scripts for Sickel et al. 'eDNA allows non-lethal detection of cavity nesting Hymenoptera and their parasitoids'
 
 ## Study design (short version)
 105 vacated nest tubes of cavity nesting Hymenoptera were selected, covering nests of different sizes, parasitised and otherwise mixed species nests.
