@@ -1,8 +1,6 @@
 #!/bin/bash
 
-#script for COI data, VSEARCH
-#read joining, filtering, denoising, taxonomic classification, community table
-#path to VSEARCH
+
 conda activate vsearch__2.17.1
 
 
@@ -61,7 +59,7 @@ for f in merged/*.fq; do
     echo ====================================
     echo Filtering sample $s
     echo ====================================
-#relabel?
+
   vsearch --fastq_filter $f \
     --fastq_maxee 1.0 \
     --fastq_minlen 200 \
@@ -97,7 +95,7 @@ for f in qual/*.fa; do
 
 done
 
-#merge sample derep together
+
 cat derep/*.fa > derep/all.derep.fa
 
 
@@ -113,14 +111,6 @@ vsearch --derep_fulllength derep/all.derep.fa \
     echo Denoising
     echo ====================================
 
-#uses UNOISE version 3 algorithm
-#minsize - default 8.0
-#discarded seqs can be mapped back using otutab (VSEARCH?)
-#unoise_alpha default 2.0
-#increasing alpha trades sensitivity to differences
-#against increase in number of bad seqs, which are wronlgy predicted to be good
-#see UNOISE2 paper
-#uchime3 denovo afterwards
 
 vsearch --cluster_unoise all.fa \
         --sizein \
@@ -130,7 +120,6 @@ vsearch --cluster_unoise all.fa \
         --centroids all.denoise.fa 2>&1 | tee -a logs/_denoise.log
 
 
-  #chimera check
   echo
   echo ====================================
   echo Chimera check
@@ -138,8 +127,6 @@ vsearch --cluster_unoise all.fa \
 
 mkdir chimeras
 
-#if troubleshooting needed, add
-#--uchimealns filename
 
 vsearch --uchime3_denovo all.denoise.fa \
       --nonchimeras all.chim.fa \
@@ -150,7 +137,7 @@ vsearch --uchime3_denovo all.denoise.fa \
       --uchimeout chim.results.txt 2>&1 | tee -a logs/_chimeras.log
 
 
-#make community table
+
 echo
 echo ====================================
 echo Make community table
@@ -170,11 +157,7 @@ vsearch --usearch_global derep/all.derep.fa \
     --biomout asvtab.biom 2>&1 | tee -a logs/_asvtab.log
 
 
-#taxonomic assignment, three steps
-#1st: direct assignments with NBCI data (prepared with BC-databaser)
-#2nd: dierct assignments with BOLD data
-#both are Arthropod species in Germany
-#3rd: hierarchical classification with SINTAX and MIDORI_UNIQ_GB241_CO1_SINTAX
+#adapted from Wilson et al, 2021, Agriculture, Ecosystems and Environment 310, 107296
 echo
 echo ====================================
 echo Taxonomic classification
