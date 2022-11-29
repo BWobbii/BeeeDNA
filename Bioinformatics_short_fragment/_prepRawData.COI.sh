@@ -1,8 +1,5 @@
 #!/bin/bash
 
-#script for COI data, preprocessing
-#demultiplexing and primer trimming
-#short and long possible
 conda activate cutadapt__3.7
 
 mkdir logs
@@ -17,11 +14,10 @@ mkdir demux
 tagF=($(grep "tagF" config.COI.txt | cut -f2 -d"=" | awk '{print $1*2}'))
 tagR=($(grep "tagR" config.COI.txt | cut -f2 -d"=" | awk '{print $1*2}'))
 
-head -n $tagF /mnt/data/homes/sickel/Dokumente/bin/tags/tags_fwd.fasta > tags_fwd.fa
-head -n $tagR /mnt/data/homes/sickel/Dokumente/bin/tags/tags_rev.fasta > tags_rev.fa
+head -n $tagF tags_fwd.fasta > tags_fwd.fa
+head -n $tagR tags_rev.fasta > tags_rev.fa
 
-#input file names - make sure they are same in subsetting step!
-#or change them?
+
 cutadapt \
   -e 0.15 --no-indels \
   -O 7 \
