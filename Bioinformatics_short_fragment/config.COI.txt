@@ -7,6 +7,6 @@ prRn=GTRATWGCHCCDGCTARWACWGG
 prFr=GGDGGRTAWACWGTTCAWCCWGTHCC
 prRr=CCWGTWYTAGCHGGDGCWATYAC
 
-refdb="/mnt/data/homes/sickel/Dokumente/bin/referenceDBs/coi.GBIF.Arthro.2021-03-12.tax_ed.fa"
-refdb="/mnt/data/homes/sickel/Dokumente/bin/referenceDBs/bold.fa"
-hiedb="/mnt/data/homes/sickel/Dokumente/bin/referenceDBs/MIDU.fin.fa"
+refdb="coi.GBIF.Arthro.2021-03-12.tax_ed.fa"
+refdb="bold.fa"
+hiedb="MIDU.fin.fa"
