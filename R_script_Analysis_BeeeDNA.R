@@ -11,6 +11,7 @@ library(PMCMRplus)
 library(broom)
 library(parsnip)
 library(yardstick)
+library(RVAideMemoire)
 
 
 #visualisation
@@ -140,7 +141,7 @@ PCR.sh <- M.sh.spl$A %>%
 pcr_pos <- function(data, x){
 	data %>%
 		summarise(POS = sum({{x}}), TOT = length({{x}})) %>%
-	mutate(PCT = POS/TOT)
+	mutate(PCT = POS/TOT, NEG = TOT-POS)
 		}
 
 pcr_agree <- function(data, x){
@@ -151,6 +152,12 @@ pcr_agree <- function(data, x){
 		mutate(PCR.AGREE = AGREE/TOT)
 		}
 
+test_fisher <- function(data, var1, var2){
+	data %>%	summarise(Y = {{var1}}, N = {{var2}}) %>%
+			select(c(Y, N)) %>%
+			as.data.frame() %>% fisher.test(alternative ="two.sided") 
+			}
+
 
 M.COI.sh %>% pcr_pos(Band.1stPCR)
 PCR.sh %>% pcr_agree(DiffPCR)
@@ -160,14 +167,68 @@ M.COI.sh %>% group_by(SampleType) %>% pcr_pos(Band.1stPCR)
 PCR.sh %>% group_by(SampleType) %>% pcr_agree(DiffPCR)
 
 
+
+M.COI.sh %>% group_by(SampleType) %>% pcr_pos(Band.1stPCR) %>%
+		test_fisher(., POS, NEG) 
+
+PCR.sh %>% group_by(SampleType) %>% pcr_agree(DiffPCR) %>%
+		test_fisher(., AGREE, DISAGREE) 
+
 #analysis by nest size, data for supplement
 #both sample types
 M.COI.sh %>% group_by(Group.Sub) %>% pcr_pos(Band.1stPCR)
 PCR.sh %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR)
 
+
+M.COI.sh %>% group_by(Group.Sub) %>% pcr_pos(Band.1stPCR) %>%
+		test_fisher(., POS, NEG) #not significant
+
+PCR.sh %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR) %>%
+		test_fisher(., AGREE, DISAGREE) 
+
+
+PCR.sh %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR) %>%
+	column_to_rownames(var = "Group.Sub") %>%
+	select(AGREE, DISAGREE) %>% 	t() %>% 
+	fisher.multcomp
+
+
+
+
 #nest size & sample types separately
-M.COI.sh %>% group_by(SampleType, Group.Sub) %>% pcr_pos(Band.1stPCR)
-PCR.sh %>% group_by(SampleType, Group.Sub) %>% pcr_agree(DiffPCR)
+M.COI.sh %>% filter(SampleType == 'feces') %>% group_by(Group.Sub) %>% pcr_pos(Band.1stPCR)
+PCR.sh %>% filter(SampleType == 'feces') %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR)
+
+M.COI.sh %>% filter(SampleType == 'feces') %>% group_by(Group.Sub) %>% pcr_pos(Band.1stPCR) %>%
+		test_fisher(., POS, NEG) 
+
+PCR.sh %>% filter(SampleType == 'feces') %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR) %>%
+		test_fisher(., AGREE, DISAGREE) 
+
+
+
+PCR.sh %>% filter(SampleType == 'feces') %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR) %>%
+	column_to_rownames(var = "Group.Sub") %>%
+	select(AGREE, DISAGREE) %>% 	t() %>% 
+	fisher.multcomp
+
+
+
+
+M.COI.sh %>% filter(SampleType == 'swab') %>% group_by(Group.Sub) %>% pcr_pos(Band.1stPCR)
+PCR.sh %>% filter(SampleType == 'swab') %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR)
+
+M.COI.sh %>% filter(SampleType == 'swab') %>% group_by(Group.Sub) %>% pcr_pos(Band.1stPCR) %>%
+		test_fisher(., POS, NEG)
+
+PCR.sh %>% filter(SampleType == 'swab') %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR) %>%
+		test_fisher(., AGREE, DISAGREE) 
+
+PCR.sh %>% filter(SampleType == 'swab') %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR) %>%
+	column_to_rownames(var = "Group.Sub") %>%
+	select(AGREE, DISAGREE) %>% 	t() %>% 
+	fisher.multcomp
+
 
 
 #coi.long fragment
@@ -194,6 +255,12 @@ PCR.lg %>% pcr_agree(DiffPCR)
 #analysis by nest size
 M.COI.lg %>% group_by(Group.Sub) %>% pcr_pos(Band.1stPCR)
 PCR.lg %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR)
+
+M.COI.lg %>% group_by(Group.Sub) %>% pcr_pos(Band.1stPCR) %>%
+		test_fisher(., POS, NEG) 
+PCR.lg %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR) %>%
+		test_fisher(., AGREE, DISAGREE) 
+
 
 
 
