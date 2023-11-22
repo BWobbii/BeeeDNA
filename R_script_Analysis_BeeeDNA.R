@@ -83,20 +83,23 @@ yield_plot <- function(data, x, y) {
 	geom_jitter(size = 2, pch = 21, fill = 'gray')+
 	theme_bw() + theme(panel.grid.major=element_blank(),
 		panel.grid.minor=element_blank(), axis.line=element_line(colour = 'black'))+
-		 stat_n_text(geom="label", show.legend = FALSE)+
+		
 				geom_signif(comparisons = list(c("1-5", "10+")), annotations='*' ,
-              map_signif_level=TRUE, y = 2010) +
+              map_signif_level=TRUE, y_position = 1980, tip_length = 0, vjust = 0.5) +
 		geom_signif(comparisons = list(c("1-5", "6-10")), annotations='*' ,
-              map_signif_level=TRUE)
+              map_signif_level=TRUE, vjust = 0.5, tip_length = 0, y_position = 1850)+
+		ylim(-0.5, 2200)
 	
 }
+
 
 
 BP.yield1 <- yield_plot(M.COI.yield, Group.Sub, gDNA.mass.ng) +
 	ylab('DNA yield [ng]') +
 	theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+        axis.ticks.x=element_blank()) +
+		ggtitle('fecal and swab samples')+ theme(plot.title = element_text(size = 10))
 
 BP.yield1
 
@@ -105,7 +108,8 @@ BP.yieldS <- M.COI.yield %>% filter(SampleType == "swab") %>%
 	ylab('DNA yield [ng]') +
 		theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+        axis.ticks.x=element_blank()) +
+	ggtitle('swab samples') + theme(plot.title = element_text(size = 10))
 
 BP.yieldS
 
@@ -114,12 +118,19 @@ BP.yieldF <-  M.COI.yield %>% filter(SampleType == "feces") %>%
 	xlab('nest size') + ylab('DNA yield [ng]') +
 	 scale_x_discrete(labels = c('S', 'M', 'L'))
 
+BP.yieldF <-  M.COI.yield %>% filter(SampleType == "feces") %>%
+	yield_plot(.,Group.Sub,gDNA.mass.ng )+
+	xlab('nest size') + ylab('DNA yield [ng]') +
+	 scale_x_discrete(labels = c('S \n(N = 20)', 'M\n(N=20)', 'L\n(N=10)'))+
+	ggtitle('fecal samples')+
+	theme(axis.text.x=element_text(size=9))+ theme(plot.title = element_text(size = 10))
+
 BP.yieldF
 
-plot_grid(BP.yield1, BP.yieldS, BP.yieldF, ncol = 1, labels = c('A', 'B', 'C'))
-ggsave('YIELD.pdf', height = 10)
-ggsave('YIELD.jpg', height = 10)
 
+plot_grid(BP.yield1, BP.yieldS, BP.yieldF, ncol = 1, labels = c('A', 'B', 'C'))
+ggsave('YIELD.pdf', height = 180, width = 70, units = "mm")
+ggsave('YIELD.jpg', height = 180, width = 70, units = "mm")
 
 
 #DNA QUALITY ANALYSIS
@@ -181,7 +192,7 @@ PCR.sh %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR)
 
 
 M.COI.sh %>% group_by(Group.Sub) %>% pcr_pos(Band.1stPCR) %>%
-		test_fisher(., POS, NEG) #not significant
+		test_fisher(., POS, NEG) 
 
 PCR.sh %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR) %>%
 		test_fisher(., AGREE, DISAGREE) 
@@ -268,9 +279,9 @@ PCR.lg %>% group_by(Group.Sub) %>% pcr_agree(DiffPCR) %>%
 m.seq <- m.tib %>% filter(Gene == unique(m.tib$Gene)[1]) %>%
 		mutate(NEST.ID = paste(Trap.ID, Nest.No, sep = '.'),
 			Exp.Group = factor(ifelse(Exp.Group == 'mixed', 'mixed', 
-							ifelse(Exp.Group == 'para', 'para', 
+							ifelse(Exp.Group == 'para', 'mixed', 
 								ifelse(Exp.Group == 'normal' & SampleType == 'swab', 'swab','feces'))),
-						levels = c('feces', 'swab', 'para', 'mixed')),
+						levels = c('feces', 'swab',  'mixed')),
 
 				Group.Sub = factor(ifelse(Exp.Group %in% c('swab', 'feces'),Group.Sub, 
 							ifelse(No.Cells <= 5, '1-5',
@@ -295,6 +306,21 @@ COI.sh <- phyloseq(otu_table(ASV.sh, taxa_are_rows=TRUE), tax_table(TAX.V), samp
 
 #analyse laboratory controls
 (controls <- subset_samples(COI.meta, SampleType %in% c("PCRControl", "ExtrControl")))
+
+control.sub <- t(as.data.frame(sort(taxa_sums(controls), decreasing=T)[1:50]))
+
+jpeg(file='controls.jpg', res = 300, pointsize = 8,
+		width = 100, height = 100, units = "mm", quality = 100)
+par(mar=c(4,5,1,1), mfrow=c(1,1))
+gap.barplot(control.sub, xlab = '', ylab = '', cex.axis=0.5,
+			ytics = c(0,1000, 2000, 3000, 4000, 21000, 22000, 23000, 24000, 25000),
+			xaxlab = colnames(control.sub) , las=2, horiz=T,
+			 gap = c(4500, 20000), col = c(rep("grey",50)), ylim = c(0, 8000))
+abline(v = 75, col ="blue", lwd = 2)
+mtext('ASV', side = 2, line = 3.5)
+mtext('read counts', side = 1, line = 2.5)
+dev.off()
+
 (controls		= prune_taxa(taxa_sums(controls)>75, controls))
 
 #remove contaminating taxa from dataset
@@ -380,28 +406,16 @@ P.Hydet1 <- HY.DET %>% group_by(SampleType) %>%
 		mutate(pct = round((n.HySp/tot*100), digits = 1)) %>%
 		hydet_plot(., SampleType, pct, n.HySp) +
 		xlab('Sample type')+
-		scale_x_discrete(labels = c('feces', 'swab (exp. 1&2)'))+
+		scale_x_discrete(labels = c('feces\n(N=100)', 'swabs; exp. 1&2\n(N=210)'))+
 		geom_signif(comparisons = list(c("feces", "swab")), annotations='*' ,
-              map_signif_level=TRUE, y = 75) +
-		geom_text(aes(x = SampleType, y = 95, label = c('N = 100', 'N = 210')), position = position_dodge(width = 1), vjust = -0.5, size = 4)
+              map_signif_level=TRUE, y = 75, tip_length = 0) +
+		theme(axis.text=element_text(size=9),
+        axis.title=element_text(size=10))
 
+P.Hydet1
 
-
-#hym det by experimental group, swabs only
-P.Hydet2 <- HY.DET %>% filter(SampleType == "swab") %>% group_by(Exp.Group) %>%
-	summarise(n.HySp = sum(n.Hy), tot = sum(total)) %>%
-	mutate(pct = round((n.HySp/tot*100), digits = 1)) %>%
-		hydet_plot(., Exp.Group, pct, n.HySp) +
-		xlab('experimental group') +
-		geom_text(aes(x = Exp.Group, y = 95, label = c('N = 100', 'N = 74', 'N = 36')), position = position_dodge(width = 1), vjust = -0.5, size = 4)+
-		scale_fill_discrete(name = "Experimental group")
-
-
-
-plot_grid(P.Hydet1, P.Hydet2, ncol =1, labels = c('A', 'B'))
-ggsave('HY.DET.OCT.pdf', height = 7.5)
-ggsave('HY.DET.OCT.jpg', height = 7.5)
-
+ggsave('HY.DET.OCT.pdf', width = 80, height = 80, unit = "mm")
+ggsave('HY.DET.OCT.jpg', , width = 80, height = 80, unit = "mm")
 
 
 
@@ -533,7 +547,13 @@ GLM_analysis1 <- function(model, null.model) {
 
 #
 GLM_analysis2 <- function(model, data, var){
-		pred <- model %>% predict(new_data = data) %>% mutate(truth = var)					#predict
+		pred <- model %>% predict(new_data = data) %>% mutate(truth = var) %>% mutate(truth = factor(truth, levels = c(1, 0)),
+															.pred_class = factor(.pred_class, levels = c(1,0))) 
+		#relevel(pred$.pred_class, "1")	
+		#relevel(pred$truth, "1")	
+		
+		#pred <- pred %>% relevel(.pred_class, "1") %>% relevel(truth, "1")
+		
 		conf_mat <- conf_mat(pred, truth = truth, estimate = .pred_class) %>% 
 		tidy %>% mutate(name = c('TN', 'FP', 'FN', 'TP'))%>% list
 		acc <- accuracy(pred, truth = truth, estimate = .pred_class) #yes
@@ -552,7 +572,7 @@ GLM_analysis2 <- function(model, data, var){
 
 #GLM No.1: HYM DETECTION IN BOTH DUPLICATES
 HY.DET2 <- HY.tib %>% filter(Exp.Group %in% c('feces', 'swab')) %>% reshape_det2(., 'A', 'B') %>% 
-			select(DiffHy, gDNA.mass.ng, SampleType, Group.Sub)
+			select(DiffHy, SampleType, Group.Sub)
 
 HY.DET2 %>%	summarise(count = sum(DiffHy),
 			pct = sum(DiffHy)/length(DiffHy))	
@@ -560,7 +580,13 @@ HY.DET2 %>%	summarise(count = sum(DiffHy),
 HY.DET2 <- HY.DET2 %>% mutate_at('DiffHy', factor)
 
 
-HY.DET2_FIT <-  GLM_details %>% fit(DiffHy ~ gDNA.mass.ng * SampleType + gDNA.mass.ng * Group.Sub, data = HY.DET2)
+HY.DET2_FIT <-  GLM_details %>% fit(DiffHy ~ SampleType * Group.Sub, data = HY.DET2)
+
+
+#HY.DET2_FIT <-  GLM_details %>% fit(DiffHy ~ SampleType * Group.Sub, data = HY.DET2)
+
+
+
 HY.DET2_NULL <-  GLM_details %>% fit(DiffHy ~ 1, data = HY.DET2)
 
 RES.HY.DET2_1 <- GLM_analysis1(model = HY.DET2_FIT, null.model = HY.DET2_NULL )
@@ -570,64 +596,14 @@ RES.HY.DET2_1
 RES.HY.DET2_2
 RES.HY.DET2_2$conf_mat
 
-#GLM No.2: HYM DETECTION IN AT LEAST ONE REPLICATE
-
-HY.DET1 <-HY.tib %>% filter(Exp.Group %in% c('feces', 'swab')) %>% reshape_det1(., 'A', 'B') %>% 
-			select(DiffHy, gDNA.mass.ng, SampleType, Group.Sub)
-
-HY.DET1 %>%	summarise(count = sum(DiffHy),
-			pct = sum(DiffHy)/length(DiffHy))	
-
-HY.DET1 <- HY.DET1 %>% mutate_at('DiffHy', factor)
-
-
-HY.DET1_FIT <-  GLM_details %>% fit(DiffHy ~ gDNA.mass.ng * SampleType + gDNA.mass.ng * Group.Sub, data = HY.DET1)
-HY.DET1_NULL <-  GLM_details %>% fit(DiffHy ~ 1, data = HY.DET1)
-
-RES.HY.DET1_1 <- GLM_analysis1(model = HY.DET1_FIT, null.model = HY.DET1_NULL )
-RES.HY.DET1_2 <- GLM_analysis2(model = HY.DET1_FIT, data = HY.DET1, var = HY.DET1$DiffHy)
-
-RES.HY.DET1_1
-RES.HY.DET1_2
-RES.HY.DET1_2$conf_mat
-
-
-
-#GLM No.3: HYM DETECTION ~ PCR SUCCESS
-#convert factors to numeric
-HY.DETpcr <- HY.tib %>% mutate_at(c('SampleType', 'Group.Sub'), as.numeric)
-
-HY.DETpcr %>%	summarise(count = sum(Hy.det),
-			pct = sum(Hy.det)/length(Hy.det))	
-
-
-HY.DETpcr <- HY.DETpcr %>% mutate_at('Hy.det', factor)
-
-HY.DETpcr_FIT <-  GLM_details %>% fit(Hy.det ~ Band.1stPCR * SampleType + Band.1stPCR * Group.Sub, data = HY.DETpcr)
-HY.DETpcr_NULL <-  GLM_details %>% fit(Hy.det ~ 1, data = HY.DETpcr)
-
-RES.HY.DETpcr_1 <- GLM_analysis1(model = HY.DETpcr_FIT, null.model = HY.DETpcr_NULL )
-RES.HY.DETpcr_2 <- GLM_analysis2(model = HY.DETpcr_FIT, data = HY.DETpcr, var = HY.DETpcr$Hy.det)
-
-
-RES.HY.DETpcr_1
-RES.HY.DETpcr_2
-RES.HY.DETpcr_2$conf_mat
-
-
-
 
 ### MIXED SPECIES DETECTION, EXPERIMENT 2
-HY.MIX <- filter(HY.tib, Exp.Group %in% c('para', 'mixed'))
+HY.MIX <- filter(HY.tib, Exp.Group == 'mixed')
 
 HY.MIX %>%	summarise(count = sum(N.spec),
 			pct = count/length(N.spec))	
 
-
-
-HY.MIX %>% group_by(Exp.Group) %>%
-	summarise(MIX = sum(N.spec), TOT = length(N.spec)) %>%
-	mutate(PCT = MIX/TOT)
+length(HY.MIX$N.spec) #110
 
 #for GLM analysis
 
@@ -652,15 +628,14 @@ reshape_mix1 <- function(data, replicate1, replicate2){
 
 #GLM No.4: SPECIES MIX IN BOTH DUPLICATES
 HY.MIX2 <- reshape_mix2(HY.MIX, 'A', 'B') %>% 
-			select(DiffMix, gDNA.mass.ng, SampleType, Group.Sub)
+			select(DiffMix,  Group.Sub)
 
 HY.MIX2 %>%	summarise(count = sum(DiffMix),
 			pct = count/length(DiffMix))	
 
 HY.MIX2 <- HY.MIX2 %>% mutate_at('DiffMix', factor)
 
-
-HY.MIX2_FIT <-  GLM_details %>% fit(DiffMix ~ gDNA.mass.ng, data = HY.MIX2)
+HY.MIX2_FIT <-  GLM_details %>% fit(DiffMix ~ Group.Sub, data = HY.MIX2)
 HY.MIX2_NULL <-  GLM_details %>% fit(DiffMix ~ 1, data = HY.MIX2)
 
 RES.HY.MIX2_1 <- GLM_analysis1(model = HY.MIX2_FIT, null.model = HY.MIX2_NULL )
@@ -670,53 +645,6 @@ RES.HY.MIX2_2 <-GLM_analysis2(model = HY.MIX2_FIT, data = HY.MIX2, var = HY.MIX2
 RES.HY.MIX2_1
 RES.HY.MIX2_2
 RES.HY.MIX2_2$conf_mat
-
-
-
-#GLM No.5: SPECIES MIX IN AT LEAST ONE REPLICATE
-HY.MIX1 <- reshape_mix1(HY.MIX, 'A', 'B') %>% 
-			select(DiffMix, gDNA.mass.ng, SampleType, Group.Sub)
-
-HY.MIX1 %>%	summarise(count = sum(DiffMix),
-			pct = count/length(DiffMix))	
-
-HY.MIX1 <- HY.MIX1 %>% mutate_at('DiffMix', factor)
-
-
-HY.MIX1_FIT <-  GLM_details %>% fit(DiffMix ~ gDNA.mass.ng, data = HY.MIX1)
-HY.MIX1_NULL <-  GLM_details %>% fit(DiffMix ~ 1, data = HY.MIX1)
-
-RES.HY.MIX1_1 <- GLM_analysis1(model = HY.MIX1_FIT, null.model = HY.MIX1_NULL )
-RES.HY.MIX1_2 <- GLM_analysis2(model = HY.MIX1_FIT, data = HY.MIX1, var = HY.MIX1$DiffMix)
-
-
-RES.HY.MIX1_1
-RES.HY.MIX1_2
-RES.HY.MIX1_2$conf_mat
-
-
-
-#GLM No.6: SPECIES MIX ~ PCR SUCCESS
-#convert factors to numeric
-HY.MIXpcr <- HY.MIX %>% mutate_at(c('SampleType', 'Group.Sub'), as.numeric)
-
-HY.MIXpcr %>%	summarise(count = sum(N.spec),
-			pct = count/length(N.spec))	
-
-
-HY.MIXpcr <- HY.MIXpcr %>% mutate_at('N.spec', factor)
-
-HY.MIXpcr_FIT <-  GLM_details %>% fit(N.spec ~ Band.1stPCR, data = HY.MIXpcr)
-HY.MIXpcr_NULL <-  GLM_details %>% fit(N.spec ~ 1, data = HY.MIXpcr)
-
-RES.HY.MIXpcr_1 <- GLM_analysis1(model = HY.MIXpcr_FIT, null.model = HY.MIXpcr_NULL )
-RES.HY.MIXpcr_2 <- GLM_analysis2(model = HY.MIXpcr_FIT, data = HY.MIXpcr, var = HY.MIXpcr$N.spec)
-
-
-RES.HY.MIXpcr_1
-RES.HY.MIXpcr_2
-RES.HY.MIXpcr_2$conf_mat
-
 
 
 
@@ -742,15 +670,17 @@ DNA.tax <- data.frame(tax_table(sh.Arthro))
 sp.DNA <- get_taxa_unique(sh.Arthro, "species")
 sp.DNA <- subset(sp.DNA, sp.DNA != "s:_")
 sp.MORPHO <- MORPHO %>% pull(species1_morpho, species2_morpho) %>% unique %>% na.omit
+sp.MORPHO2 <- MORPHO %>% pull(species1_visual, species2_visual)%>% unique %>% na.omit
+sp.MORPHO <- c(sp.MORPHO, sp.MORPHO2) %>% unique
 
 (sp.T1 <- sp.MORPHO[sp.MORPHO %in% sp.DNA == "TRUE"])
 #in agreement: 3 wild bees (O. bicornis, H. communis, H. truncorum), 
 #2 solitary wasps (Trypoxylon sp.), 
-#2 parasitods (C. indagaor, S. decemguttata)
+#2 other (C. indagaor, S. decemguttata)
 
 
 (sp.F1 <- sp.MORPHO[sp.MORPHO %in% sp.DNA == "FALSE"])
-#not detected via eDNA: H. leucomelana, T. cyanea
+#not detected via eDNA: H. leucomelana, T. cyanea, M. acasta, M. obscurus
 
 (sp.T2 <- sp.DNA[sp.DNA %in% sp.MORPHO == "TRUE"])
 #as above
@@ -760,9 +690,7 @@ length(sp.F2)
 
 sp.DNAonly <- subset_taxa(sh.Arthro, tax_table(sh.Arthro)[,7] %in% sp.F2)
 get_taxa_unique(sp.DNAonly, 'order') 
-write.table(tax_table(sp.DNAonly), 'taxa-DNAonly.txt')
-
-
+write.table(tax_table(sp.DNAonly), 'taxa-DNAonly.csv', sep = ',')
 
 
 
@@ -848,6 +776,7 @@ DNA.taxa %>%
 		mutate_if(is.logical, as.numeric) %>%
 		bind_rows(., RES.COMP) -> RES.COMP
 	}
+
 
 
 #### Screening for
@@ -971,7 +900,9 @@ P.COMP1 <- RES.COMP2 %>% group_by(tax.level) %>%
 		mutate(total = c(TOT.ORD, TOT.FAM, TOT.GEN, TOT.SP), pct = round((n.cor/total *100), digits =1)) %>%
 			comparison_plot(., tax.level, pct, n.cor) +
 			xlab('taxonomic level')+ scale_y_continuous(limits = c(0,110), breaks = c(0,25,50,100)) +
-			annotate(geom = "text", x = c(1:4), y = 100, label = c(TOT.ORD,TOT.FAM,TOT.GEN,TOT.SP))
+			annotate(geom = "text", x = c(1:4), y = 100, label = c(TOT.ORD,TOT.FAM,TOT.GEN,TOT.SP))+
+		theme(axis.text=element_text(size=9),
+        axis.title=element_text(size=10))
 
 
 #experiment 1 only
@@ -986,37 +917,41 @@ P.COMP2 <- RES.COMP2 %>% filter(EXP %in% c('swab', 'feces')) %>%
 			xlab('nest size') +
 			geom_vline(xintercept = c(1.5, 2.5), lty = 'dashed', col = 'gray')+
 			scale_x_discrete(labels=c("S", "M", "L")) +
-			scale_y_continuous(limits = c(0,110), breaks = c(0,25,50,100)) 
+			scale_y_continuous(limits = c(0,110), breaks = c(0,25,50,100)) +
+					theme(axis.text=element_text(size=9),
+        axis.title=element_text(size=10))
+
+
 			 
 
 
 #experiment 2 only
-P.COMP3 <- RES.COMP2 %>% filter(EXP %in% c('para', 'mixed')) %>% 
+P.COMP3 <- RES.COMP2 %>% filter(EXP == 'mixed') %>% 
 		filter(NEST.ID %in% c(NEST_wOrd, NEST_wFam, NEST_wGen, NEST_wSp)) %>%
 		group_by(EXP, NEST.Size, tax.level) %>%
 		summarise(n.cor = sum(ID.cor),
 			total = n()) %>%
 		mutate(pct = round((n.cor/total *100), digits =1)) %>%
 		comparison_plot(., NEST.Size, pct, n.cor) +
-			facet_grid(EXP ~ tax.level) +
+			facet_grid(. ~ tax.level) +
 		xlab('nest size')+
 		geom_vline(xintercept = c(1.5, 2.5), lty = 'dashed', col = 'gray')+
 		scale_x_discrete(labels=c("S", "M", "L"))+
-			scale_y_continuous(limits = c(0,110), breaks = c(0,25,50,100)) 
+			scale_y_continuous(limits = c(0,110), breaks = c(0,25,50,100)) +
+				theme(axis.text=element_text(size=9),
+        axis.title=element_text(size=10))
 
 
 
-plot_grid(P.COMP1, P.COMP2, P.COMP3, ncol =1, labels = c('A', 'B', 'C'))
 
 bottom_row <- plot_grid(P.COMP2, P.COMP3, labels = c('B', 'C'))
 plot_grid(P.COMP1, bottom_row, labels = c('A', ''), ncol = 1)
 
 
-ggsave('HY.COMP.pdf', height = 10, width = 7)
-ggsave('HY.COMP.jpg', height = 10, width = 7)
 
 
-
+ggsave('HY.COMP.pdf', height = 180, width = 180, units = 'mm')
+ggsave('HY.COMP.jpg', height = 180, width = 180, units = 'mm')
 
 
 
@@ -1024,7 +959,6 @@ ggsave('HY.COMP.jpg', height = 10, width = 7)
 
 
 ##SUPPLEMENTAL FIGURE S1
-## DO WITH PREVIOS FUNCTION?
 
 plot_suppl <- function(data, x, y, label, fill){
 		ggplot(data, aes({{x}}, {{y}}, fill = {{fill}})) +
@@ -1069,7 +1003,7 @@ P.Hy.SIZE1 <- plot_suppl(HY.SPEC.SIZE1, pseudo.no, pct, n.HySp, SampleType) +
 
 
 
-HY.SPEC.SIZE2 <- HY.tib %>% filter(Exp.Group == 'para') %>% group_by(No.Cells, SampleType) %>%
+HY.SPEC.SIZE2 <- HY.tib %>% filter(Exp.Group == 'mixed') %>% group_by(No.Cells, SampleType) %>%
 	summarise(n.HySp = sum(Hy.det == 1),
 		total = n()) %>%
 	mutate(pct = round((n.HySp/total*100), digits = 1),
@@ -1080,46 +1014,287 @@ HY.SPEC.SIZE2 <- HY.tib %>% filter(Exp.Group == 'para') %>% group_by(No.Cells, S
 
 P.Hy.SIZE2 <- plot_suppl(HY.SPEC.SIZE2, pseudo.no, pct, n.HySp, SampleType) +
 		theme(legend.position = "none")+
-		scale_x_continuous(breaks = c(1:5, 7:11, 13:14),
-					labels = c(1:5, 6:10, 11, 12))+
+		scale_x_continuous(breaks = c(1:5, 7:11, 13:14, 17),
+					labels = c(1:5, 6:10, 11, 12, 15))+
 		theme(strip.background = element_blank(), 
 		strip.text.x = element_blank()) +
 		scale_fill_manual(name = 'Sample type', labels = c('feces', 'swabs'), values = 'grey')+
-		annotate(geom = "text", x = 3, y = 110, label = 'N = 4 / 6 / 4 / 20 / 8')+
-		annotate(geom = "text", x = 9, y = 110, label = 'N = 4 / 6 / 2 / 4 / 8')+
-		annotate(geom = "text", x = 14, y = 110, label = 'N = 4 / 4')
+		annotate(geom = "text", x = 2.5, y = 110, label = 'N = 4 / 6 / 18 / 24 / 16')+
+		annotate(geom = "text", x = 9, y = 110, label = 'N = 8 / 8 / 2 / 4 / 8')+
+		annotate(geom = "text", x = 15, y = 110, label = 'N = 6 / 4 / 2')
 
 	
-
-
-HY.SPEC.SIZE3 <- HY.tib %>% filter(Exp.Group == 'mixed') %>% group_by(No.Cells, SampleType) %>%
-	summarise(n.HySp = sum(Hy.det == 1),
-		total = n()) %>%
-	mutate(pct = round((n.HySp/total*100), digits = 1),
-		pseudo.no = ifelse(No.Cells < 6, No.Cells, 
-					ifelse(No.Cells < 11, No.Cells+1, No.Cells+2))	)
-	
-
-
-P.Hy.SIZE3 <- plot_suppl(HY.SPEC.SIZE3, pseudo.no, pct, n.HySp, SampleType) +
-		theme(legend.position = "none")+
-		scale_x_continuous(breaks = c(3:5, 7:8, 13, 17),
- 					labels = c(3:5, 6:7, 11, 15))+
-		theme(strip.background = element_blank(), 
-		strip.text.x = element_blank()) +
-		scale_fill_manual(name = 'Sample type', labels = c('feces', 'swabs'), values = 'grey')+
-		annotate(geom = "text", x = 3, y = 110, label = 'N = 14 / 4 / 8')+
-		annotate(geom = "text", x = 9, y = 110, label = 'N = 4 / 2 ')+
-		annotate(geom = "text", x = 14, y = 110, label = 'N = 2 / 2')
-
-
-
-plots <- align_plots(P.Hy.SIZE1, P.Hy.SIZE2, align = 'v', axis = '1')
-bottom_row <- plot_grid(plots[[2]], P.Hy.SIZE3, labels = c('B', 'C'))
-
-plot_grid(plots[[1]], bottom_row, labels = c('A', ''), ncol = 1)
+plot_grid(P.Hy.SIZE1, P.Hy.SIZE2, labels = c('A', 'B'), ncol = 1)
 
 ggsave('HY.DET.size.pdf', height = 7.5, width = 10)
 ggsave('HY.DET.size.jpg', height = 7.5, width = 10)
+
+##GLM analysis with DNA yield and PCR success considered, for supplements
+
+
+HY.DET2 <- HY.tib %>% filter(Exp.Group %in% c('feces', 'swab')) %>% reshape_det2(., 'A', 'B') %>% 
+			select(DiffHy, gDNA.mass.ng, SampleType, Group.Sub)
+
+HY.DET2 %>%	summarise(count = sum(DiffHy),
+			pct = sum(DiffHy)/length(DiffHy))	
+
+HY.DET2 <- HY.DET2 %>% mutate_at('DiffHy', factor)
+
+
+HY.DET2_FIT <-  GLM_details %>% fit(DiffHy ~ gDNA.mass.ng * SampleType + gDNA.mass.ng * Group.Sub, data = HY.DET2)
+HY.DET2_NULL <-  GLM_details %>% fit(DiffHy ~ 1, data = HY.DET2)
+
+RES.HY.DET2_1 <- GLM_analysis1(model = HY.DET2_FIT, null.model = HY.DET2_NULL )
+RES.HY.DET2_2 <- GLM_analysis2(model = HY.DET2_FIT, data = HY.DET2, var = HY.DET2$DiffHy)
+
+RES.HY.DET2_1
+RES.HY.DET2_2
+RES.HY.DET2_2$conf_mat
+
+#GLM No.2: HYM DETECTION IN AT LEAST ONE REPLICATE
+
+HY.DET1 <-HY.tib %>% filter(Exp.Group %in% c('feces', 'swab')) %>% reshape_det1(., 'A', 'B') %>% 
+			select(DiffHy, gDNA.mass.ng, SampleType, Group.Sub)
+
+HY.DET1 %>%	summarise(count = sum(DiffHy),
+			pct = sum(DiffHy)/length(DiffHy))	
+
+HY.DET1 <- HY.DET1 %>% mutate_at('DiffHy', factor)
+
+
+HY.DET1_FIT <-  GLM_details %>% fit(DiffHy ~ gDNA.mass.ng * SampleType + gDNA.mass.ng * Group.Sub, data = HY.DET1)
+HY.DET1_NULL <-  GLM_details %>% fit(DiffHy ~ 1, data = HY.DET1)
+
+RES.HY.DET1_1 <- GLM_analysis1(model = HY.DET1_FIT, null.model = HY.DET1_NULL )
+RES.HY.DET1_2 <- GLM_analysis2(model = HY.DET1_FIT, data = HY.DET1, var = HY.DET1$DiffHy)
+
+RES.HY.DET1_1
+RES.HY.DET1_2
+RES.HY.DET1_2$conf_mat
+
+
+
+#GLM No.3: HYM DETECTION ~ PCR SUCCESS
+#convert factors to numeric
+HY.DETpcr <- HY.tib %>% mutate_at(c('SampleType', 'Group.Sub'), as.numeric)
+
+HY.DETpcr %>%	summarise(count = sum(Hy.det),
+			pct = sum(Hy.det)/length(Hy.det))	
+
+
+HY.DETpcr <- HY.DETpcr %>% mutate_at('Hy.det', factor)
+
+HY.DETpcr_FIT <-  GLM_details %>% fit(Hy.det ~ Band.1stPCR * SampleType + Band.1stPCR * Group.Sub, data = HY.DETpcr)
+HY.DETpcr_NULL <-  GLM_details %>% fit(Hy.det ~ 1, data = HY.DETpcr)
+
+RES.HY.DETpcr_1 <- GLM_analysis1(model = HY.DETpcr_FIT, null.model = HY.DETpcr_NULL )
+RES.HY.DETpcr_2 <- GLM_analysis2(model = HY.DETpcr_FIT, data = HY.DETpcr, var = HY.DETpcr$Hy.det)
+
+
+RES.HY.DETpcr_1
+RES.HY.DETpcr_2
+RES.HY.DETpcr_2$conf_mat
+
+
+
+
+### MIXED SPECIES DETECTION, EXPERIMENT 2
+HY.MIX <- filter(HY.tib, Exp.Group == 'mixed')
+
+HY.MIX %>%	summarise(count = sum(N.spec),
+			pct = count/length(N.spec))	
+
+length(HY.MIX$N.spec) #110
+
+#for GLM analysis
+
+reshape_mix2 <- function(data, replicate1, replicate2){
+	data %>%
+	filter(Replicate == replicate1) %>%
+	rename(Mix1 = N.spec) %>%
+	mutate(Mix2 = data$N.spec[data$Replicate == replicate2],
+		DiffMix = ifelse(Mix1 + Mix2 == 2, 1, 0)) %>%
+	mutate_at(c('SampleType', 'Group.Sub'), as.numeric)
+	}
+
+reshape_mix1 <- function(data, replicate1, replicate2){
+	data %>%
+	filter(Replicate == replicate1) %>%
+	rename(Mix1 = N.spec) %>%
+	mutate(Mix2 = data$N.spec[data$Replicate == replicate2],
+		DiffMix = ifelse(Mix1 + Mix2 > 0, 1, 0)) %>%
+	mutate_at(c('SampleType', 'Group.Sub'), as.numeric)
+	}
+
+
+#GLM No.4: SPECIES MIX IN BOTH DUPLICATES
+HY.MIX2 <- reshape_mix2(HY.MIX, 'A', 'B') %>% 
+			select(DiffMix, gDNA.mass.ng, SampleType, Group.Sub)
+
+HY.MIX2 %>%	summarise(count = sum(DiffMix),
+			pct = count/length(DiffMix))	
+
+HY.MIX2 <- HY.MIX2 %>% mutate_at('DiffMix', factor)
+
+
+HY.MIX2_FIT <-  GLM_details %>% fit(DiffMix ~ gDNA.mass.ng, data = HY.MIX2)
+HY.MIX2_NULL <-  GLM_details %>% fit(DiffMix ~ 1, data = HY.MIX2)
+
+RES.HY.MIX2_1 <- GLM_analysis1(model = HY.MIX2_FIT, null.model = HY.MIX2_NULL )
+RES.HY.MIX2_2 <-GLM_analysis2(model = HY.MIX2_FIT, data = HY.MIX2, var = HY.MIX2$DiffMix)
+
+
+RES.HY.MIX2_1
+RES.HY.MIX2_2
+RES.HY.MIX2_2$conf_mat
+
+
+
+#GLM No.5: SPECIES MIX IN AT LEAST ONE REPLICATE
+HY.MIX1 <- reshape_mix1(HY.MIX, 'A', 'B') %>% 
+			select(DiffMix, gDNA.mass.ng, SampleType, Group.Sub)
+
+HY.MIX1 %>%	summarise(count = sum(DiffMix),
+			pct = count/length(DiffMix))	
+
+HY.MIX1 <- HY.MIX1 %>% mutate_at('DiffMix', factor)
+
+
+HY.MIX1_FIT <-  GLM_details %>% fit(DiffMix ~ gDNA.mass.ng, data = HY.MIX1)
+HY.MIX1_NULL <-  GLM_details %>% fit(DiffMix ~ 1, data = HY.MIX1)
+
+RES.HY.MIX1_1 <- GLM_analysis1(model = HY.MIX1_FIT, null.model = HY.MIX1_NULL )
+RES.HY.MIX1_2 <- GLM_analysis2(model = HY.MIX1_FIT, data = HY.MIX1, var = HY.MIX1$DiffMix)
+
+
+RES.HY.MIX1_1
+RES.HY.MIX1_2
+RES.HY.MIX1_2$conf_mat
+
+
+
+#GLM No.6: SPECIES MIX ~ PCR SUCCESS
+#convert factors to numeric
+HY.MIXpcr <- HY.MIX %>% mutate_at(c('SampleType', 'Group.Sub'), as.numeric)
+
+HY.MIXpcr %>%	summarise(count = sum(N.spec),
+			pct = count/length(N.spec))	
+
+
+HY.MIXpcr <- HY.MIXpcr %>% mutate_at('N.spec', factor)
+
+HY.MIXpcr_FIT <-  GLM_details %>% fit(N.spec ~ Band.1stPCR, data = HY.MIXpcr)
+HY.MIXpcr_NULL <-  GLM_details %>% fit(N.spec ~ 1, data = HY.MIXpcr)
+
+RES.HY.MIXpcr_1 <- GLM_analysis1(model = HY.MIXpcr_FIT, null.model = HY.MIXpcr_NULL )
+RES.HY.MIXpcr_2 <- GLM_analysis2(model = HY.MIXpcr_FIT, data = HY.MIXpcr, var = HY.MIXpcr$N.spec)
+
+
+RES.HY.MIXpcr_1
+RES.HY.MIXpcr_2
+RES.HY.MIXpcr_2$conf_mat
+
+
+
+#Prepare table to show O. bicornis in Morpho is often H. truncorum in DNA
+
+#subset MORPHO data set to include O. bicornis only
+MORPH.bicornis <- MORPHO %>% filter(species1_morpho == "s:Osmia_bicornis")
+
+
+#subset sh.Arthro (DNA dataset including only Arthropods) to include Hymenoptera only
+sh.Hym <- subset_taxa(sh.Arthro, order == "o:Hymenoptera")
+
+
+#subset by ID_nest of MORPH.bicornis
+sh.Hym.sub <- subset_samples(sh.Hym, NEST.ID %in% MORPH.bicornis$ID_nest)
+
+#subset to only include bee species
+get_taxa_unique(sh.Hym.sub, 'species')
+sh.Hym.sub <- subset_taxa(sh.Hym.sub, species %in% c('s:Hylaeus_communis', 's:Osmia_bicornis', 
+					's:Heriades_truncorum', 's:Stelis_breviuscula'))
+sh.Hym.sub <- prune_samples(sample_sums(sh.Hym.sub) > 0, sh.Hym.sub) #4 taxa, 27 samples
+
+
+
+Hym.sub <- data.frame(otu_table(sh.Hym.sub))
+
+SuppTab <- Hym.sub %>% summarise(across(dplyr::everything(),
+			list(rowname = ~list(which(. > 0))))) %>%
+
+	pivot_longer(
+		cols = contains("_"),
+		names_to = "key",
+		values_to = "val",
+		values_transform = list(val = as.character)) %>%
+
+		separate(key, c("column", "name"), sep = "_") %>%
+
+		pivot_wider(
+		names_from = name,
+		values_from = val) %>%
+
+		mutate(rowname = str_replace_all(rowname, 
+							c("c\\(" = "", 
+								"\\)" = "",
+								"integer\\(0" = "NA")),
+		column = paste(column, get_variable(sh.Hym.sub, "NEST.ID"), sep = '-'),
+		NEST.ID = get_variable(sh.Hym.sub, "NEST.ID"),
+		Sample.ID = get_variable(sh.Hym.sub, "SampleID.ASV"),
+		Replicate = get_variable(sh.Hym.sub, "Replicate"),
+		Sample.Type = get_variable(sh.Hym.sub, "SampleType"),
+		Exp = get_variable(sh.Hym.sub, "Exp.Group"),
+		Nest.Size = get_variable(sh.Hym.sub, "Group.Sub"))
+
+#replace colon on rowname to comma to avoid NA in next step
+
+SuppTab$rowname <- str_replace(SuppTab$rowname, ":", ", ")
+
+SuppTab$zOTU <- lapply(SuppTab$rowname, function(x) as.numeric(strsplit(x, ",")[[1]])) %>%
+		 rapply(., how = "replace", function(x) rownames(Hym.sub)[x])
+
+DNA.tax <- data.frame(tax_table(sh.Hym.sub))
+
+
+SuppTab$species_DNA <- replace_zOTU(SuppTab$zOTU, level = 'species')  %>%
+	sapply( function(x) subset(x, x != "s:_")) 
+
+SuppTab_export <- SuppTab %>% select(NEST.ID, Replicate, Sample.Type, Exp, Nest.Size) 
+
+
+tmp <- t(list2DF(lapply(SuppTab$species_DNA, `length<-`, max(lengths(SuppTab$species_DNA)))))
+
+colnames(tmp) <- c("species.1", "species.2")
+
+
+SuppTab_export <- add_column(SuppTab_export, as_tibble(tmp, validate = NULL, .name_repair = NULL)) %>%
+				mutate(across(6:7, ~ str_replace(.x, 's:', ''))) %>%
+				mutate(across(6:7, ~ str_replace(.x, '_', ' '))) %>%
+				mutate_at(c('Replicate', 'Sample.Type'), as.factor) %>%	 
+				mutate(Replicate = recode(Replicate, A="1", B = "2"),
+					Exp = recode(Exp, mixed = "2", swab = "1", feces = "1"),
+					Nest.Size = recode(Nest.Size, "1-5" = "small", "6-10" = "medium", "10+" = "large")) %>%
+					rename(Experiment = "Exp", PCR.Replicate = "Replicate")
+
+
+
+write.table(SuppTab_export, file = "SuppTab.csv",
+          row.names = FALSE, sep = ",")
+
+
+MisSpec <- c(SuppTab_export$species.1, SuppTab_export$species.2)
+
+
+Mis.tib <- tibble(names = names(table(MisSpec)), counts = as.numeric(unname(table(MisSpec))))
+
+ggplot(Mis.tib, aes(x = names, y = counts)) + geom_col() + 
+			theme_bw() + theme(panel.grid.major=element_blank(),
+		panel.grid.minor=element_blank(), axis.line=element_line(colour = 'black'),
+				axis.text.y = element_text(face = "italic"))+
+		coord_flip() + xlab('species detected') + geom_text(aes(label = counts), hjust = 1.5, colour = "white", size = 5)
+
+ggsave('MisBee.pdf')
+ggsave('MisBee.jpg')
+
 
 
