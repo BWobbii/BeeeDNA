@@ -1,5 +1,5 @@
 # BeeeDNA
-Data Analysis Scripts for Sickel et al. 'eDNA allows non-lethal detection of cavity nesting Hymenoptera and their parasitoids'
+Data Analysis Scripts for Sickel et al. 'BEE-quest of the nest: A novel method for eDNA-based, nonlethal detection of cavity-nesting hymenopterans and other arthropods' (in press)
 
 ## Study design (short version)
 105 vacated nest tubes of cavity nesting Hymenoptera were selected, covering nests of different sizes, parasitised and otherwise mixed species nests.
